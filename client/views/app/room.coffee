@@ -529,19 +529,18 @@ Template.room.events
 		console.log 'DRAG OUT'
 
 	'dropped #dropzone': (e) ->
+		console.log 'room dropped #dropzone' if window.rocketDebug
 		FS?.Utility?.eachFile e, (file) ->
 			newFile = new (FS.File)(file)
 			newFile.rid = Session.get('openedRoom')
 			Files.insert newFile, (error, fileObj) ->
-				if error
-					toastr.error 'Upload failed... please try again. Error: ' + error
-				else
+				unless error
 					toastr.success 'Upload succeeded!'
-					console.log(newFile, fileObj);
+					console.log('room fileObj', fileObj) if window.rocketDebug
 					Meteor.call 'sendMessage',
 						_id: Random.id()
 						rid: fileObj.rid
-						msg: 'File Uploaded: https://rocket.chat/cfs/files/Files/' + fileObj.original.name
+						msg: 'File Uploaded: *' + fileObj.original.name + '* \n' + document.location.origin + '/cfs/files/Files/' + fileObj._id
 						file:
 							_id: fileObj._id
 
