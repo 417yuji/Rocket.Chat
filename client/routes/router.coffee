@@ -10,6 +10,8 @@ FlowRouter.subscriptions = ->
 		if Meteor.userId()?
 			@register 'userData', Meteor.subscribe('userData')
 			@register 'activeUsers', Meteor.subscribe('activeUsers')
+			if Meteor.user()?.admin
+				@register 'admin-settings', Meteor.subscribe('admin-settings')
 
 
 FlowRouter.route '/',
@@ -37,25 +39,8 @@ FlowRouter.route '/home',
 FlowRouter.route '/settings/:group?',
 	name: 'settings'
 
-	subscriptions: (params, queryParams) ->
-		@register 'admin-settings', Meteor.subscribe('admin-settings')
-
 	action: ->
-		FlowLayout.render 'main', {}
-
-		track = Tracker.autorun ->
-			if not FlowRouter.subsReady()
-				return
-
-			track?.stop()
-
-			if not Meteor.user()? or Meteor.user().admin isnt true
-				FlowRouter.go('home')
-				return
-
-			FlowLayout.render 'main', {center: 'settings'}
-			KonchatNotification.getDesktopPermission()
-
+		FlowLayout.render 'main', {center: 'settings'}
 
 FlowRouter.route '/history/private',
 	name: 'privateHistory'

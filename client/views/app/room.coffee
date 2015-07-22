@@ -522,6 +522,29 @@ Template.room.events
 	'click .stop-video': (event) ->
 		webrtc.stop()
 
+	'dragenter #dropzone': (e) ->
+		console.log 'DRAG ENTER'
+
+	'dragleave #dropzone': (e) ->
+		console.log 'DRAG OUT'
+
+	'dropped #dropzone': (e) ->
+		FS?.Utility?.eachFile e, (file) ->
+			newFile = new (FS.File)(file)
+			newFile.rid = Session.get('openedRoom')
+			Files.insert newFile, (error, fileObj) ->
+				if error
+					toastr.error 'Upload failed... please try again. Error: ' + error
+				else
+					toastr.success 'Upload succeeded!'
+					console.log(newFile, fileObj);
+					Meteor.call 'sendMessage',
+						_id: Random.id()
+						rid: fileObj.rid
+						msg: 'File Uploaded: https://rocket.chat/cfs/files/Files/' + fileObj.original.name
+						file:
+							_id: fileObj._id
+
 Template.room.onCreated ->
 	console.log 'room.onCreated' if window.rocketDebug
 	# this.scrollOnBottom = true
