@@ -45,7 +45,7 @@
 		return if element.classList.contains("system")
 		clearEditing()
 		id = element.getAttribute("id")
-		message = ChatMessageHistory.findOne { _id: id, 'u._id': Meteor.userId() }
+		message = ChatMessage.findOne { _id: id, 'u._id': Meteor.userId() }
 		input.value = message.msg
 		editing.element = element
 		editing.index = index or getEditingIndex(element)
@@ -86,11 +86,10 @@
 				#Meteor.call 'onClientBeforeSendMessage', {}
 				Meteor.call 'sendMessage', msgObject
 
-	deleteMsg = (element) ->
-			id = element.getAttribute("id")
-			Meteor.call 'deleteMessage', { id: id }, (error, result) ->
-				if error
-					return Errors.throw error.reason
+	deleteMsg = (message) ->
+		Meteor.call 'deleteMessage', message, (error, result) ->
+			if error
+				return Errors.throw error.reason
 
 	update = (id, rid, input) ->
 		if _.trim(input.value) isnt ''
