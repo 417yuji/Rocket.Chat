@@ -5,15 +5,12 @@
 @import "utils/_keyframes.import.less";
 @import "utils/_preloader.import.less";
 @import "utils/_emojione.import.less";
-.cf_ {
-	display: inline-block;
-	&:after {
-		content: ".";
-		display: block;
+.clearfix {
+	clear: both;
+	&::after {
+		content: "";
+		display: table;
 		clear: both;
-		visibility: hidden;
-		line-height: 0;
-		height: 0;
 	}
 }
 
@@ -111,20 +108,6 @@ blockquote {
 	border-radius: 0px;
 }
 
-.iframely-oembed {
-	margin: 4px 0 0 0;
-	clear: both;
-	max-width: 400px;
-	min-height: 200px;
-	// background-color: #DFDFDF;
-	font {
-		display: none;
-	}
-	> img {
-		height: 200px;
-	}
-}
-
 .alert {
 	padding: 15px;
 	margin-bottom: 20px;
@@ -219,7 +202,7 @@ blockquote {
 }
 
 .input-line {
-	.cf_;
+	.clearfix;
 	display: block;
 	margin-bottom: 12px;
 	&:nth-last-child(1) {
@@ -666,6 +649,30 @@ label.required:after {
 			.transform(rotate(-45deg) translateY(4px));
 		}
 	}
+	&.top {
+		&:before {
+			.transform(rotate(45deg) translateX(-2px) translateY(2px));
+		}
+		&:after {
+			.transform(rotate(-45deg) translateX(2px) translateY(2px));
+		}
+	}
+	&.bottom {
+		&:before {
+			.transform(rotate(-45deg) translateX(-2px) translateY(-2px));
+		}
+		&:after {
+			.transform(rotate(45deg) translateX(2px) translateY(-2px));
+		}
+	}
+	&.close {
+		&:before {
+			.transform(rotate(-45deg));
+		}
+		&:after {
+			.transform(rotate(45deg));
+		}
+	}
 }
 
 .a-plus {
@@ -941,20 +948,12 @@ a.github-fork {
 		overflow-x: hidden;
 		overflow-y: auto;
 		-webkit-overflow-scrolling: touch;
-		.custom-scroll(transparent,
-		rgba(255,
-		255,
-		255,
-		0.05));
+		.custom-scroll(transparent, rgba(255, 255, 255, 0.05));
 		direction: rtl;
-		.calc(height,
-		~'100% - ' @header-min-height + @footer-min-height);
-		.transition(transform .3s cubic-bezier(.5,
-		0,
-		.1,
-		1));
+		.calc(height, ~'100% - ' @header-min-height + @footer-min-height);
+		.transition(transform .3s cubic-bezier(.5, 0, .1, 1));
 		&._hidden {
-			.transform(translateX(-100%));
+			.transform(translateY(-100%) translateY(-50px));
 		}
 		> .wrapper {
 			direction: ltr;
@@ -1340,6 +1339,7 @@ a.github-fork {
 		text-align: right;
 		background: #fff;
 		min-height: @footer-min-height;
+		height: @footer-min-height;
 		background-color: @primary-background-color;
 		.logo {
 			display: block;
@@ -1364,6 +1364,7 @@ a.github-fork {
 		img {
 			display: inline-block;
 			max-width: 222px;
+			max-height: 43px;
 			margin-bottom: -10px;
 		}
 	}
@@ -1733,7 +1734,7 @@ a.github-fork {
 	}
 	.list {
 		a {
-			.cf_;
+			.clearfix;
 			padding: 10px 16px;
 			width: 100%;
 			color: @primary-font-color;
@@ -2146,6 +2147,9 @@ a.github-fork {
 				text-decoration: underline;
 			}
 		}
+		&.temp .body{
+			color: #ccc;
+		}
 	}
 }
 
@@ -2552,7 +2556,7 @@ a.github-fork {
 			display: none;
 		}
 		a {
-			.cf_;
+			.clearfix;
 			padding: 5px 0;
 			height: 30px;
 			background-color: transparent;
@@ -2799,27 +2803,11 @@ a.github-fork {
 }
 
 .avatarPrompt {
-	padding: 22px 30px 30px;
-	overflow: scroll;
-	height: 100%;
 	header {
-		max-width: 520px;
-		padding: 18px 0 23px;
 		p {
-			//font-family: "Muli";
-			margin: 8px 0 0;
 			font-size: 14px;
 			line-height: 22px;
 			font-weight: 300;
-		}
-	}
-	h2 {
-		&:extend(.rocket-h2);
-		color: @primary-font-color;
-		line-height: 24px;
-		margin: 0;
-		&.error {
-			color: #b40202;
 		}
 	}
 	img {
@@ -2984,7 +2972,7 @@ a.github-fork {
 	}
 	.logo {
 		display: block;
-		margin-bottom: 30px;
+		margin: 0 20px 30px 20px;
 		> img {
 			display: inline-block;
 			position: relative;
@@ -3182,8 +3170,10 @@ a.github-fork {
 		text-align: right;
 		padding-left: 20px;
 	}
-	button {
+	.button {
 		min-width: 120px;
+		cursor: pointer;
+		text-align: center;
 	}
 	input[type=file] {
 		position: absolute !important;
@@ -3193,6 +3183,7 @@ a.github-fork {
 		height: 100%;
 		opacity: 0;
 		z-index: 10000;
+		cursor: pointer;
 		* {
 			cursor: pointer;
 		}
@@ -3307,13 +3298,19 @@ a.github-fork {
 			}
 		}
 	}
+	.messages-container {
+		.message-form {
+			> .formatting-tips {
+				display: none;
+			}
+		}
+	}
 }
 
 .dropzone {
 	.dropzone-overlay {
 		display: none;
 	}
-
 	&.over .dropzone-overlay {
 		background-color: rgba(0, 0, 0, 0.5);
 		position: fixed;
@@ -3328,9 +3325,8 @@ a.github-fork {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-
 		> div {
-			background-color: rgba(0,0,0,0.6);
+			background-color: rgba(0, 0, 0, 0.6);
 			padding: 40px;
 			border-radius: 10px;
 			pointer-events: none;

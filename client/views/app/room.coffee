@@ -186,11 +186,13 @@ Template.room.helpers
 		users = []
 		onlineUsers = RoomManager.onlineUsers.get()
 
-		for username in room.usernames
+		for username in room?.usernames or []
 			if onlineUsers[username]?
 				users.push
 					username: username
 					status: onlineUsers[username]
+
+		users = _.sortBy users, 'username'
 
 		ret =
 			_id: this._id
@@ -298,25 +300,38 @@ Template.room.events
 		event.preventDefault()
 		Meteor.call 'joinRoom', @_id
 
-	"click .burger": ->
-		chatContainer = $("#rocket-chat")
-		if chatContainer.hasClass("menu-closed")
-			chatContainer.removeClass("menu-closed").addClass("menu-opened")
-		else
-			chatContainer.addClass("menu-closed").removeClass("menu-opened")
-
 	'focus .input-message': (event) ->
 		KonchatNotification.removeRoomNotification @_id
 
 	'keyup .input-message': (event) ->
-		ChatMessages.keyup(@_id, event, Template.instance())
+		Template.instance().chatMessages.keyup(@_id, event, Template.instance())
+
+	'paste .input-message': (e) ->
+		if not e.originalEvent.clipboardData?
+			return
+
+		items = e.originalEvent.clipboardData.items
+		for item in items
+			if item.kind is 'file' and item.type.indexOf('image/') isnt -1
+				e.preventDefault()
+
+				blob = item.getAsFile()
+
+				newFile = new (FS.File)(blob)
+				newFile.name('Clipboard')
+				newFile.rid = Session.get('openedRoom')
+				newFile.recId = Random.id()
+				newFile.userId = Meteor.userId()
+				Files.insert newFile, (error, fileObj) ->
+					unless error
+						toastr.success 'Upload from clipboard succeeded!'
 
 	'keydown .input-message': (event) ->
-		ChatMessages.keydown(@_id, event, Template.instance())
+		Template.instance().chatMessages.keydown(@_id, event, Template.instance())
 
 	'click .message-form .icon-paper-plane': (event) ->
 		input = $(event.currentTarget).siblings("textarea")
-		ChatMessages.send(this._id, input.get(0))
+		Template.instance().chatMessages.send(this._id, input.get(0))
 
 	'click .add-user': (event) ->
 		toggleAddUser()
@@ -419,7 +434,7 @@ Template.room.events
 		instance.showUsersOffline.set(!instance.showUsersOffline.get())
 
 	"mousedown .edit-message": (e) ->
-		ChatMessages.edit(e.currentTarget.parentNode.parentNode)
+		Template.instance().chatMessages.edit(e.currentTarget.parentNode.parentNode)
 		# Session.set 'editingMessageId', undefined
 		# Meteor.defer ->
 		# 	Session.set 'editingMessageId', self._id
@@ -433,6 +448,7 @@ Template.room.events
 	'click .delete-message': (event) ->
 		message = @_arguments[1]
 		msg = event.currentTarget.parentNode.parentNode
+		instance = Template.instance()
 		return if msg.classList.contains("system")
 		swal {
 			title: t('Are_you_sure')
@@ -446,7 +462,7 @@ Template.room.events
 			html: false
 		}, ->
 			swal t('Deleted'), t('Your_entry_has_been_deleted'), 'success'
-			ChatMessages.deleteMsg(message)
+			instance.chatMessages.deleteMsg(message)
 
 	'click .start-video': (event) ->
 		_id = Template.instance().data._id
@@ -483,15 +499,18 @@ Template.room.onCreated ->
 
 Template.room.onRendered ->
 	FlexTab.check()
-	ChatMessages.init()
+	this.chatMessages = new ChatMessages
+	this.chatMessages.init(this.firstNode)
 	# ScrollListener.init()
 
 	wrapper = this.find('.wrapper')
 	newMessage = this.find(".new-message")
 
 	template = this
-	onscroll = ->
-		template.atBottom = wrapper.scrollTop is wrapper.scrollHeight - wrapper.clientHeight
+	onscroll = _.throttle ->
+		console.log wrapper.scrollTop
+		template.atBottom = wrapper.scrollTop >= wrapper.scrollHeight - wrapper.clientHeight
+	, 200
 
 	Meteor.setInterval ->
 		if template.atBottom
@@ -499,8 +518,12 @@ Template.room.onRendered ->
 			newMessage.className = "new-message not"
 	, 100
 
-	wrapper.addEventListener 'touchmove', ->
+	wrapper.addEventListener 'touchstart', ->
+		console.log 'touchstart'
 		template.atBottom = false
+
+	wrapper.addEventListener 'touchend', ->
+		console.log 'touchend'
 		onscroll()
 
 	wrapper.addEventListener 'mousewheel', ->

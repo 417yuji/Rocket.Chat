@@ -34,6 +34,8 @@ Meteor.startup ->
 			delete openedRooms[rid].timeout
 			delete openedRooms[rid].dom
 
+			RoomHistoryManager.clear rid
+
 			ChatMessage.remove rid: rid
 
 	computation = Tracker.autorun ->
@@ -78,7 +80,7 @@ Meteor.startup ->
 				deleteMsgStream.on rid, (msg) ->
 					ChatMessage.remove _id: msg._id
 
-				computation.invalidate()
+				computation?.invalidate()
 
 		return {
 			ready: ->
