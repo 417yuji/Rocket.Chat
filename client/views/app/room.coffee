@@ -76,7 +76,6 @@ Template.room.helpers
 
 		if roomData.t is 'd'
 			username = _.without roomData.usernames, Meteor.user().username
-			UserManager.addUser username
 
 			userData = {
 				name: Session.get('user_' + username + '_name')
@@ -188,9 +187,17 @@ Template.room.helpers
 
 		for username in room?.usernames or []
 			if onlineUsers[username]?
+				utcOffset = onlineUsers[username]?.utcOffset
+				if utcOffset?
+					if utcOffset > 0
+						utcOffset = "+#{utcOffset}"
+
+					utcOffset = "(UTC #{utcOffset})"
+
 				users.push
 					username: username
-					status: onlineUsers[username]
+					status: onlineUsers[username]?.status
+					utcOffset: utcOffset
 
 		users = _.sortBy users, 'username'
 
@@ -235,11 +242,18 @@ Template.room.helpers
 	selfVideoUrl: ->
 		return Session.get('selfVideoUrl')
 
+	videoActive: ->
+		return (Session.get('remoteVideoUrl') || Session.get('selfVideoUrl'))
+
+	remoteMonitoring: ->
+		return (webrtc?.stackid? && (webrtc.stackid == 'webrtc-ib'))
+
 	flexOpenedRTC1: ->
 		return 'layout1' if Session.equals('flexOpenedRTC1', true)
 
 	flexOpenedRTC2: ->
 		return 'layout2' if Session.equals('flexOpenedRTC2', true)
+
 	rtcLayout1: ->
 		return (Session.get('rtcLayoutmode') == 1 ? true: false);
 
@@ -252,6 +266,8 @@ Template.room.helpers
 	noRtcLayout: ->
 		return (!Session.get('rtcLayoutmode') || (Session.get('rtcLayoutmode') == 0) ? true: false);
 
+	maxMessageLength: ->
+		return RocketChat.settings.get('Message_MaxAllowedSize')
 
 
 Template.room.events
@@ -442,6 +458,13 @@ Template.room.events
 		# 		$('.input-message-editing').select()
 
 	"click .mention-link": (e) ->
+		channel = $(e.currentTarget).data('channel')
+		if channel?
+			channelObj = ChatSubscription.findOne name: channel
+			if channelObj?
+				FlowRouter.go 'room', {_id: channelObj.rid}
+			return
+
 		Session.set('flexOpened', true)
 		Session.set('showUserInfo', $(e.currentTarget).data('username'))
 
@@ -468,10 +491,24 @@ Template.room.events
 		_id = Template.instance().data._id
 		webrtc.to = _id.replace(Meteor.userId(), '')
 		webrtc.room = _id
+		webrtc.mode = 1
 		webrtc.start(true)
 
 	'click .stop-video': (event) ->
 		webrtc.stop()
+
+	'click .monitor-video': (event) ->
+		_id = Template.instance().data._id
+		webrtc.to = _id.replace(Meteor.userId(), '')
+		webrtc.room = _id
+		webrtc.mode = 2
+		webrtc.start(true)
+
+
+	'click .setup-video': (event) ->
+		webrtc.mode = 2
+		webrtc.activateLocalStream()
+
 
 	'dragenter .dropzone': (e) ->
 		e.currentTarget.classList.add 'over'
@@ -507,8 +544,8 @@ Template.room.onRendered ->
 	newMessage = this.find(".new-message")
 
 	template = this
+
 	onscroll = _.throttle ->
-		console.log wrapper.scrollTop
 		template.atBottom = wrapper.scrollTop >= wrapper.scrollHeight - wrapper.clientHeight
 	, 200
 
@@ -519,11 +556,13 @@ Template.room.onRendered ->
 	, 100
 
 	wrapper.addEventListener 'touchstart', ->
-		console.log 'touchstart'
 		template.atBottom = false
 
 	wrapper.addEventListener 'touchend', ->
-		console.log 'touchend'
+		onscroll()
+
+	wrapper.addEventListener 'scroll', ->
+		template.atBottom = false
 		onscroll()
 
 	wrapper.addEventListener 'mousewheel', ->
