@@ -4,7 +4,15 @@ The Complete Open Source Chat Solution
 
 ## Demo
 
-Checkout the latest version at [https://rocket.chat](https://rocket.chat)
+Checkout the latest version at [https://demo.rocket.chat](https://demo.rocket.chat)
+
+Try it with docker:
+
+```
+docker-compose up
+```
+
+and check it out at http://localhost:80
 
 Download the Native Cross-Platform Desktop Application at [Rocket.Chat.Electron](https://github.com/RocketChat/Rocket.Chat.Electron/releases)
 
@@ -50,9 +58,10 @@ It is a great solution for communities and companies wanting to privately host t
 - Avatars
 - Markdown
 - Emojis
+- Sent Message Edit and Deletion
 - Transcripts / History
 - File Upload / Sharing
-- I18n - [Internationalization with Lingohub](https://translate.lingohub.com/engelgabriel/rocket-dot-chat/dashboard)
+- I18n - Supports 22 Languages [Internationalization with Lingohub](https://translate.lingohub.com/engelgabriel/rocket-dot-chat/dashboard)
 - Hubot Friendly - [Hubot Integration Project](https://github.com/RocketChat/hubot-rocketchat)
 - Media Embeds
 - Link Previews
@@ -61,6 +70,8 @@ It is a great solution for communities and companies wanting to privately host t
 - REST-full APIs - [Ready for testing ...](https://github.com/RocketChat/Rocket.Chat/wiki/REST-full-APIs)
 - Remote Locations Video Monitoring - [Early access ...](https://github.com/RocketChat/Rocket.Chat/wiki/Remote-Video-Monitoring)
 - Native Cross-Platform Desktop Application [Rocket.Chat.Electron - HELP WANTED](https://github.com/RocketChat/Rocket.Chat.Electron/releases)
+- Mobile app for iPhone, iPad, and iPod touch [Available now! - help us test](https://github.com/RocketChat/Rocket.Chat/wiki/Mobile-app-for-iPhones,-iPads,-iPod-Touch)
+- Mobile app for Android phone, tablet, and TV stick [Install now! - help us test](https://github.com/RocketChat/Rocket.Chat/wiki/Mobile-app-for-Android-phone,-tablet,-set-top-box,-and-TV-stick)
 
 ### Roadmap
 
@@ -109,11 +120,17 @@ Use the automated build at our [Official Docker Registry](https://registry.hub.d
 docker pull rocketchat/rocket.chat
 ```
 
+### sloppy.io
+
+Host your docker container at [sloppy.io](http://sloppy.io). Get an account and use the [quickstarter](https://github.com/sloppyio/quickstarters/tree/master/rocketchat)
+
 ### Heroku
 
 Host your own Rocket.Chat server for **FREE** with [One-Click Deploy](https://heroku.com/deploy?template=https://github.com/RocketChat/Rocket.Chat/tree/master)
 
 [![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/RocketChat/Rocket.Chat/tree/master)
+
+
 
 ## Development Installation
 
@@ -128,6 +145,14 @@ Now just clone and start the app:
 git clone https://github.com/RocketChat/Rocket.Chat.git
 cd Rocket.Chat
 meteor
+```
+
+or use docker:
+
+```
+git clone https://github.com/RocketChat/Rocket.Chat.git
+cd Rocket.Chat
+docker run -it -p 3000:3000 -v "$(pwd)":/app danieldent/meteor
 ```
 
 ## Credits

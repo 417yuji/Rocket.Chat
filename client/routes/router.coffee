@@ -7,11 +7,9 @@ BlazeLayout.setRoot 'body'
 FlowRouter.subscriptions = ->
 	Tracker.autorun =>
 		RoomManager.init()
-		if Meteor.userId()?
-			@register 'userData', Meteor.subscribe('userData')
-			@register 'activeUsers', Meteor.subscribe('activeUsers')
-			if Meteor.user()?.admin
-				@register 'admin-settings', Meteor.subscribe('admin-settings')
+		@register 'userData', Meteor.subscribe('userData')
+		@register 'activeUsers', Meteor.subscribe('activeUsers')
+		@register 'admin-settings', Meteor.subscribe('admin-settings')
 
 
 FlowRouter.route '/',
@@ -41,11 +39,26 @@ FlowRouter.route '/changeavatar',
 	action: ->
 		BlazeLayout.render 'main', {center: 'avatarPrompt'}
 
+FlowRouter.route '/settings/users',
+	name: 'settings-users'
+
+	action: ->
+		BlazeLayout.render 'main', {center: 'settingsUsers'}
+
 FlowRouter.route '/settings/:group?',
 	name: 'settings'
 
 	action: ->
 		BlazeLayout.render 'main', {center: 'settings'}
+
+FlowRouter.route '/usersettings/:group?',
+	name: 'userSettings'
+
+	action: (params) ->
+		unless params.group
+			params.group = 'Profile'
+		params.group = _.capitalize params.group, true
+		BlazeLayout.render 'main', { center: "userSettings#{params.group}" }
 
 FlowRouter.route '/history/private',
 	name: 'privateHistory'

@@ -62,11 +62,19 @@ Template.body.onRendered ->
 				property: 'msvalidate.01'
 				content: RocketChat.settings.get 'Meta:msvalidate.01'
 
+	if Meteor.isCordova
+		$(document.body).addClass 'is-cordova'
+
 
 Template.main.helpers
 
 	logged: ->
-		return Meteor.userId()?
+		if Meteor.userId()?
+			$('html').addClass("noscroll").removeClass("scroll")
+			return true
+		else
+			$('html').addClass("scroll").removeClass("noscroll")
+			return false
 
 	subsReady: ->
 		return not Meteor.userId()? or (FlowRouter.subsReady('userData', 'activeUsers'))
@@ -86,25 +94,70 @@ Template.main.helpers
 		console.log 'layout.helpers flexOpenedRTC2' if window.rocketDebug
 		return 'layout2' if (Session.get('rtcLayoutmode') > 1)
 
-	removeParticles: ->
-		if Match.test pJSDom, Array
-			for item in pJSDom
-				item?.pJS?.fn.vendors.destroypJS()
 
 Template.main.events
 
 	"click .burger": ->
 		console.log 'room click .burger' if window.rocketDebug
 		chatContainer = $("#rocket-chat")
-		if chatContainer.hasClass("menu-closed")
-			chatContainer.removeClass("menu-closed").addClass("menu-opened")
-		else
-			chatContainer.addClass("menu-closed").removeClass("menu-opened")
+		menu.toggle()
+
+	'touchstart': (e, t) ->
+		if document.body.clientWidth > 780
+			return
+
+		t.touchstartX = undefined
+		t.touchstartY = undefined
+		t.movestarted = false
+		if $(e.currentTarget).closest('.main-content').length > 0
+			t.touchstartX = e.originalEvent.touches[0].clientX
+			t.touchstartY = e.originalEvent.touches[0].clientY
+			t.mainContent = $('.main-content')
+
+	'touchmove': (e, t) ->
+		if t.touchstartX?
+			touch = e.originalEvent.touches[0]
+			diffX = t.touchstartX - touch.clientX
+			diffY = t.touchstartY - touch.clientY
+			absX = Math.abs(diffX)
+			absY = Math.abs(diffY)
+
+			if t.movestarted is true or (absX > 20 and absY < 20)
+				t.movestarted = true
+
+				if menu.isOpen()
+					t.left = 260 - diffX
+				else
+					t.left = -diffX
+
+				if t.left > 260
+					t.left = 260
+				if t.left < 0
+					t.left = 0
+
+				t.mainContent.addClass('notransition')
+				t.mainContent.css('transform', 'translate('+t.left+'px)')
+
+	'touchend': (e, t) ->
+		t.touchstartX = undefined
+
+		if t.movestarted is true
+			t.mainContent.removeClass('notransition')
+			t.mainContent.css('transform', '');
+
+			if menu.isOpen()
+				if t.left >= 200
+					menu.open()
+				else
+					menu.close()
+			else
+				if t.left >= 60
+					menu.open()
+				else
+					menu.close()
 
 
 Template.main.onRendered ->
-
-	$('html').addClass("noscroll").removeClass "scroll"
 
 	# RTL Support - Need config option on the UI
 	if isRtl localStorage.getItem "userLanguage"
